@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import axios from "axios";
 
 function page() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -27,12 +28,21 @@ function page() {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault(); // Prevent default form submission behavior
-    console.log("Form Submitted with details:");
-    console.log("Medicine Name:", medicineName);
-    console.log("Medicine Code:", medicineCode);
-    console.log("Uploaded Image URL:", uploadedImage);
+    console.log("Form submitted with:", {
+      medicineName,
+      medicineCode,
+      uploadedImage,
+    });
+    await axios.post("http://localhost:8080/scan", {
+      medicineName,
+      uploadedImage,
+    });
+    alert("Form submitted successfully!"); // For demonstration
+    setMedicineName("");
+    setMedicineCode("");
+    setUploadedImage(null); // Clear the uploaded image
     // Here you would typically send this data to an API or process it
   };
 
@@ -86,7 +96,7 @@ function page() {
           </div>
           <div>
             <Label htmlFor="medicine-code" className="text-gray-600">
-              Medicine code
+              Medicine code(optional)
             </Label>
             <Input
               id="medicine-code"
@@ -95,7 +105,6 @@ function page() {
               className="mt-1"
               value={medicineCode}
               onChange={(e) => setMedicineCode(e.target.value)}
-              required
             />
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 import {
   Dialog,
   DialogContent,
@@ -15,16 +16,20 @@ export function LoginDialog({ onClose }: any) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log("Login attempt with:");
-    console.log("Email:", email);
-    console.log("Password:", password);
-    // In a real application, you would send these credentials to your authentication API
-    alert("Login data logged to console!"); // For demonstration
-    if (typeof onClose === "function") {
-      onClose();
-    }
+    await axios
+      .post("http://localhost:8080/login", { email, password })
+      .then((response) => {
+        console.log("Login successful:", response.data);
+        if (typeof onClose === "function") {
+          onClose();
+        }
+      })
+      .catch((error) => {
+        console.error("Login error:", error);
+        alert("Login failed. Please try again.");
+      });
   };
 
   return (

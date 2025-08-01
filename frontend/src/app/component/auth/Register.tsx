@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 import {
   Dialog,
   DialogContent,
@@ -9,27 +10,56 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-// New RegisterDialog Component
+
 export function RegisterDialog({ onClose }: any) {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOtp, setShowOtp] = useState(false); // 👈 New state
+  const [otp, setOtp] = useState(""); // 👈 OTP input state
 
-  const handleRegister = (event: React.FormEvent) => {
+  const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log("Registration attempt with:");
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Confirm Password:", confirmPassword);
-
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    // In a real application, you would send these details to your registration API
-    alert("Registration data logged to console!"); // For demonstration
-    if (typeof onClose === "function") {
-      onClose();
+
+    try {
+      const response = await axios.post("http://localhost:8080/signup/", {
+        name,
+        email,
+        password,
+      });
+
+      console.log("Registration successful:", response.data);
+      alert("OTP has been sent to your email."); // Simulated behavior
+      setShowOtp(true); // 👈 Show OTP input after successful register
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert("Registration failed. Please try again.");
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/signup", {
+        params: {
+          email: email,
+          otp: otp,
+        },
+      });
+
+      if (response.data.success) {
+        alert("OTP verified successfully!");
+        if (typeof onClose === "function") onClose();
+      } else {
+        alert("Invalid OTP or expired.");
+      }
+    } catch (error) {
+      console.error("OTP verification failed:", error);
+      alert("Failed to verify OTP. Please try again.");
     }
   };
 
@@ -43,6 +73,20 @@ export function RegisterDialog({ onClose }: any) {
         </DialogHeader>
 
         <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <Label htmlFor="userName" className="text-gray-600">
+              UserName
+            </Label>
+            <Input
+              id="userName"
+              type="text"
+              placeholder="xyz_07"
+              className="mt-1 w-full"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
           <div>
             <Label htmlFor="reg-email" className="text-gray-600">
               Email
@@ -95,6 +139,35 @@ export function RegisterDialog({ onClose }: any) {
             </Button>
           </DialogFooter>
         </form>
+
+        {/* 👇 OTP Input Section (conditionally rendered) */}
+        {showOtp && (
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="otp" className="text-gray-600">
+                Enter OTP
+              </Label>
+              <Input
+                id="otp"
+                type="text"
+                placeholder="6-digit code"
+                className="mt-1 w-full"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                maxLength={6}
+                required
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={handleVerifyOtp}
+                className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-2 rounded-md"
+              >
+                Verify OTP
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
